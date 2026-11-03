@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom';
-import { Mic, Github, Linkedin, Mail } from 'lucide-react';
+import { Link2, Mail, Mic } from 'lucide-react';
 
 const social = [
-  { icon: Github, href: 'https://github.com/Diyajain3', label: 'GitHub' },
-  { icon: Linkedin, href: 'https://www.linkedin.com/in/diya-jain-089aa4286/', label: 'LinkedIn' },
+  { icon: Link2, href: 'https://github.com/Diyajain3', label: 'GitHub' },
+  { icon: Link2, href: 'https://www.linkedin.com/in/diya-jain-089aa4286/', label: 'LinkedIn' },
   { icon: Mail, href: 'mailto:diyajain3003@gmail.com', label: 'Email' },
 ];
 
 const linkCls = 'block py-1 text-silver/75 transition duration-200 hover:translate-x-1 hover:text-marigold';
 const headCls = 'mb-4 text-xs font-bold tracking-[0.12em] text-silver uppercase';
+
+const currentYear = new Date().getFullYear();
 
 export default function Footer() {
   return (
@@ -58,7 +60,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 flex flex-wrap justify-between gap-2 border-t border-silver/15 pt-6 text-sm">
-          <span>© {new Date().getFullYear()} IntroAI. All rights reserved.</span>
+          <span>© {currentYear} IntroAI. All rights reserved.</span>
           <span>Built with React, Express and PostgreSQL</span>
         </div>
       </div>

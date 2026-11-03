@@ -34,7 +34,7 @@ export default function Interview() {
       .then((r) => { setQuestion(r.question); setAnswered(r.answered); setTotal(r.total); })
       .catch((e) => setError(e.message))
       .finally(() => setBooting(false));
-  }, []);
+  }, [sessionId, state?.question]);
 
   async function submit() {
     setError('');
