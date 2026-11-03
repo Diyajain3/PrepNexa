@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User{
+  id String @id @default(uuid())
+  email String @unique
+  passwordHash String
+  name String
+  createdAt DateTime @default(now())
+  sessions InterviewSession[]
+  resumeChecks ResumeCheck[]
+}
+
+model Company{
+  id String @id @default(uuid())
+  name String @unique
+  practiceSets PracticeSet[]
+}
+
+model PracticeSet{
+  id String @id @default(uuid())
+  companyId String
+  company Company @relation(fields:[companyId], references: [id])
+  role String
+  category String
+  questions Question[]
+}
+
+model Topic{
+  id String @id @default(uuid())
+  name String @unique
+  category String
+  questions Question[]
+}
+
+model Question{
+  id String @id @default(uuid())
+  text String
+  difficulty String
+  source String
+  topicId String?
+  topic Topic? @relation(fields:[topicId], references:[id])
+  practiceSetId String?
+  practiceSet PracticeSet? @relation(fields: [practiceSetId], references:[id])
+  answers Answer[]
+}
+
+model InterviewSession{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  mode String
+  practiceSetId String?
+  topicId String?
+  startedAt DateTime @default(now())
+  endedAt DateTime?
+  avgScore Float?
+  answers Answer[]
+}
+
+model Answer{
+  id String @id @default(uuid())
+  sessionId String
+  session InterviewSession @relation(fields: [sessionId], references: [id])
+  questionId String
+  question Question @relation(fields: [questionId], references: [id])
+  userText String
+  score Int
+  feedback String
+  strengths Json
+  gaps Json
+  createdAt DateTime @default(now())
+  breakdown Json?
+}
+
+model ResumeCheck{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  fileName String
+  extractedText String @db.Text
+  atsScore Int
+  jdMatchScore Int?
+  feedback Json
+  createdAt DateTime @default(now())
+}

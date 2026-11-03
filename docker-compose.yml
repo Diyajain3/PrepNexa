@@ -1,0 +1,40 @@
+version: "3.9"
+services:
+  postgres:
+    image : postgres:16
+    environment:
+      - POSTGRES_USER=diya3030
+      - POSTGRES_PASSWORD=diya0000diyaoooishu
+      - POSTGRES_DB=interview_prep
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  redis:
+     image: redis:7
+     ports:
+       - "6379:6379"
+  backend:
+    build: ./backend
+    ports:
+       - "4000:4000"
+    env_file: ./backend/.env
+    depends_on:
+       - postgres   
+       - redis
+    volumes:
+       - ./backend :/app
+  
+  frontend:
+     build: ./frontend
+     ports:
+        - "4000:4000"
+     env_file: ./frontend/.env
+     depends_on: 
+        - backend
+     volumes:
+        - ./frontend:/app
+
+volumes:
+  pgdata:
+     
