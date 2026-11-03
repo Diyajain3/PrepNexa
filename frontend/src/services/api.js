@@ -21,7 +21,7 @@ export async function api(path, { method = 'GET', body, headers } = {}) {
   const data = await res.json().catch(() => ({}));
 
   // Expired or invalid token: clear it and send the user to login
-  if (res.status === 401 && !path.startsWith('/auth')) {
+  if ((res.status === 401 || res.status === 403) && !path.startsWith('/auth')) {
     localStorage.clear();
     window.location.assign('/login');
   }
