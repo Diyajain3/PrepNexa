@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   postgres:
-    image : postgres:16
+    image: postgres:16
     environment:
       - POSTGRES_USER=diya3030
       - POSTGRES_PASSWORD=diya0000diyaoooishu
@@ -11,30 +11,30 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
   redis:
-     image: redis:7
-     ports:
-       - "6379:6379"
+    image: redis:7
+    ports:
+      - "6379:6379"
   backend:
     build: ./backend
     ports:
-       - "4000:4000"
+      - "4000:4000"
     env_file: ./backend/.env
     depends_on:
-       - postgres   
-       - redis
+      - postgres
+      - redis
     volumes:
-       - ./backend :/app
-  
+      - ./backend:/app
+      - /app/node_modules
+
   frontend:
-     build: ./frontend
-     ports:
-        - "4000:4000"
-     env_file: ./frontend/.env
-     depends_on: 
-        - backend
-     volumes:
-        - ./frontend:/app
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
 
 volumes:
   pgdata:
-     

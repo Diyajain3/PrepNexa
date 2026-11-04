@@ -1,4 +1,4 @@
-import { generateQuestion } from "../services/ai.service";
+import { generateQuestion, scoreAnswer } from "../services/ai.service.js";
 
 const guard=(req,res)=>
 {
@@ -28,17 +28,17 @@ export async function testQuestion(req,res){
 
   res.json({question});
 }
-  //POST /api/ai/test-score
-  //body: {question, answer, difficulty?, category?}
-  export async function testScore(req,res)
-  {
-    if(!guard(req,res))return;
+//POST /api/ai/test-score
+//body: {question, answer, difficulty?, category?}
+export async function testScore(req,res)
+{
+  if(!guard(req,res))return;
 
-    const {question,answer,difficulty='MEDIUM', category='DSA'}=req.body;
+  const {question,answer,difficulty='MEDIUM', category='DSA'}=req.body;
 
-    if(!question) return res.status(400).json({message: 'question is required'});
+  if(!question) return res.status(400).json({message: 'question is required'});
 
-    const result=await scoreAnswer(question,answer ?? '',{category, difficulty});
+  const result=await scoreAnswer(question,answer ?? '',{category, difficulty});
 
-    res.json(result);
-  }
+  res.json(result);
+}

@@ -1,33 +1,35 @@
-import {prisma} from '../config/db.js';
+import { prisma } from '../config/db.js';
 
-const round1=(n)=> (n=== null ? null :Math.round(n*10)/10);
+const round1 = (n) => (n === null ? null : Math.round(n * 10) / 10);
 
-//GET /api/users/me
-export async function getMe(req,res)
-{
-  const userId=req.user.id;
+// GET /api/users/me
+export async function getMe(req, res) {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
 
-  const[user,sessions, answers]=await promise.all([
+  const [user, sessions, answers] = await Promise.all([
     prisma.user.findUnique({
-      where:{id:userId},
-      select:{id:true, email:true, createdAt:true, name:true},
+      where: { id: userId },
+      select: { id: true, email: true, createdAt: true, name: true },
     }),
-    prisma.interviewSession.count({where:{userId}}),
+    prisma.interviewSession.count({ where: { userId } }),
     prisma.answer.aggregate({
-      where: {session:{userId}},
-      _avg:{score:true},
-      _count:true,
+      where: { session: { userId } },
+      _avg: { score: true },
+      _count: true,
     }),
   ]);
 
-  if(!user) return res.status(404).json({message: 'User not found'});
+  if (!user) return res.status(404).json({ message: 'User not found' });
 
   res.json({
     ...user,
-    stats:{
+    stats: {
       sessions,
       answers: answers._count,
       avgScore: round1(answers._avg.score),
-    }
-  })
+    },
+  });
 }

@@ -1,9 +1,9 @@
-import {Router} from "express";
-import { requireAuth } from "../middleware/auth.middleware";
-import { getMe } from "../controllers/users.controller";
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.middleware.js";
+import { getMe } from "../controllers/users.controller.js";
 
-const router=Router();
+const router = Router();
 
-router.get('/me',requireAuth,getMe);
+router.get('/me', requireAuth, getMe);
 
 export default router;

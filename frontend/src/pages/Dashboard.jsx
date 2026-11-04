@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building2, Play, FileText, Trophy } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import TiltCard from '../components/TiltCard.jsx';
+import Button from '../components/Button.jsx';
 
-const CATEGORY_LABELS = {
-  DSA: 'Data Structures & Algorithms',
-  SYSTEM_DESIGN: 'System Design',
-  HR: 'Behavioral / HR',
-  DBMS: 'Databases',
-  OS: 'Operating Systems',
-  NETWORKS: 'Networks',
-  API_DESIGN: 'API Design',
-};
-const label = (c) => CATEGORY_LABELS[c] || c;
+const CATEGORIES = [
+  { id: 'DSA', label: 'DSA & Algorithms' },
+  { id: 'SYSTEM_DESIGN', label: 'System Design' },
+  { id: 'DBMS', label: 'Database Systems' },
+  { id: 'OS', label: 'Operating Systems' },
+  { id: 'NETWORKS', label: 'Computer Networks' },
+  { id: 'HR', label: 'Behavioral' },
+];
+
 const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD'];
+const LANGUAGES = ['Python', 'C++', 'Java', 'JavaScript'];
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,178 +23,276 @@ export default function Dashboard() {
 
   const [topics, setTopics] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [sessions, setSessions] = useState([]);
   const [stats, setStats] = useState(null);
+
+  const [search, setSearch] = useState('');
+  const [selectedCat, setSelectedCat] = useState('DSA');
   const [difficulty, setDifficulty] = useState('MEDIUM');
+  const [language, setLanguage] = useState('Python');
+
   const [loading, setLoading] = useState(true);
-  const [starting, setStarting] = useState(null); // id of the button that was clicked
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([api('/topics'), api('/companies'), api('/sessions'), api('/users/me')])
-      .then(([t, c, s, me]) => {
+    Promise.all([api('/topics'), api('/companies'), api('/users/me')])
+      .then(([t, c, me]) => {
         setTopics(t);
         setCompanies(c);
-        setSessions(s);
         setStats(me.stats);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
 
-  async function start(key, body) {
+  async function handleStartSession(topicId = null) {
     setError('');
-    setStarting(key);
+    setStarting(true);
     try {
-      const { sessionId, question, total } = await api('/sessions/start', { method: 'POST', body });
-      navigate(`/interview/${sessionId}`, { state: { question, total } });
+      const matched = topics.find((t) => t.name.toLowerCase() === search.trim().toLowerCase());
+      const targetTopicId = topicId || matched?.id || filteredTopics[0]?.id || topics.find((t) => t.category === selectedCat)?.id || topics[0]?.id;
+      const res = await api('/sessions/start', {
+        method: 'POST',
+        body: {
+          mode: 'MANUAL',
+          topicId: targetTopicId || undefined,
+          topicName: search.trim() || undefined,
+          category: selectedCat,
+          difficulty,
+          language: selectedCat === 'DSA' ? language : undefined,
+        },
+      });
+      navigate(`/interview/${res.sessionId}`, {
+        state: {
+          question: res.question,
+          total: res.total,
+          category: res.category || selectedCat,
+          language: selectedCat === 'DSA' ? language : null,
+        },
+      });
     } catch (e) {
       setError(e.message);
-      setStarting(null);
+      setStarting(false);
     }
   }
 
-  // Group topics by category
-  const grouped = topics.reduce((acc, t) => {
-    (acc[t.category] ||= []).push(t);
-    return acc;
-  }, {});
+  const filteredTopics = topics.filter((t) => {
+    const matchesCat = t.category === selectedCat;
+    const matchesQuery = !search.trim() || t.name.toLowerCase().includes(search.toLowerCase());
+    return matchesCat && matchesQuery;
+  });
 
   return (
-    <div className="container-x py-10 sm:py-14">
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-        <span className="eyebrow">Dashboard</span>
-        <h1 className="mt-3 !text-3xl sm:!text-4xl">Hi {user?.name?.split(' ')[0]}, ready to practice?</h1>
-      </motion.div>
-
-      {error && <p className="notice mt-6" role="alert">{error}</p>}
-
-      {/* STATS */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {[
-          ['Sessions', stats?.sessions ?? '-'],
-          ['Answers scored', stats?.answers ?? '-'],
-          ['Average score', stats?.avgScore ?? '-'],
-        ].map(([name, value]) => (
-          <div key={name} className="card !p-5">
-            <div className="text-sm font-semibold text-aubergine/70">{name}</div>
-            <div className="mt-1 font-display text-4xl font-bold text-aubergine">{value}</div>
-          </div>
-        ))}
+    <div className="container-wire py-8 space-y-6">
+      {/* Welcome header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-[1.5px] border-border-dark pb-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-stone-900">
+            Welcome, {user?.name || 'Engineer'}
+          </h1>
+          <p className="text-xs text-stone-600">
+            Configure your technical interview session parameters.
+          </p>
+        </div>
+        <div className="text-xs font-mono text-stone-700 bg-surface-card border-[1.5px] border-border-dark px-3 py-1.5 rounded">
+          Average Score: <strong className="text-primary">{stats?.avgScore != null ? `${stats.avgScore}/100` : 'No answers yet'}</strong>
+        </div>
       </div>
 
-      {loading ? (
-        <p className="mt-12 text-center font-semibold">Loading your practice options...</p>
-      ) : (
-        <>
-          {/* PRACTICE BY TOPIC */}
-          <section className="mt-14">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <h2 className="!text-2xl sm:!text-3xl">Practice by topic</h2>
-                <p className="mt-1 text-sm">Pick a difficulty, then choose a topic. Questions are generated fresh each time.</p>
-              </div>
-              <div className="flex gap-2" role="radiogroup" aria-label="Difficulty">
-                {DIFFICULTIES.map((d) => (
-                  <button key={d} role="radio" aria-checked={difficulty === d} onClick={() => setDifficulty(d)}
-                    className={`chip ${difficulty === d ? 'chip-active' : ''}`}>
-                    {d[0] + d.slice(1).toLowerCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
+      {error && <div className="text-xs text-primary font-bold">{error}</div>}
 
-            {topics.length === 0 && <p className="notice mt-6">No topics yet. Run the seed script on the backend.</p>}
+      {/* WIREFRAME SECTION 4: PRACTICE CONFIGURATOR (Directly matches sketch) */}
+      <motion.div
+        className="wire-box space-y-6"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {/* Top input and helper text row */}
+        <div className="grid gap-4 sm:grid-cols-[1.2fr_0.8fr] items-center">
+          <div>
+            <label className="block text-xs font-mono font-bold uppercase text-stone-600 mb-1" htmlFor="topic-input">
+              Select or Search Topic
+            </label>
+            <input
+              id="topic-input"
+              type="text"
+              list="topic-options"
+              placeholder={
+                selectedCat === 'SYSTEM_DESIGN'
+                  ? 'e.g. Caching, Load Balancing, URL Shortener, API Design...'
+                  : selectedCat === 'DBMS'
+                  ? 'e.g. Indexing, Transactions, Normalization, Query Optimization...'
+                  : selectedCat === 'OS'
+                  ? 'e.g. Processes, Threads, Deadlocks, Memory Management...'
+                  : selectedCat === 'NETWORKS'
+                  ? 'e.g. TCP/IP, DNS, HTTP/HTTPS, WebSockets...'
+                  : selectedCat === 'HR'
+                  ? 'e.g. Leadership, Team Conflict, Project Failure, Ambiguity...'
+                  : 'e.g. Arrays, Two Pointers, Binary Trees, Dynamic Programming...'
+              }
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="wire-input text-xs"
+            />
+            <datalist id="topic-options">
+              {filteredTopics.map((t) => (
+                <option key={t.id} value={t.name} />
+              ))}
+            </datalist>
+          </div>
+          <div className="text-xs text-stone-600 leading-relaxed font-sans">
+            Choose your preferred programming language, difficulty, and category to begin an automated assessment.
+          </div>
+        </div>
 
-            {Object.entries(grouped).map(([cat, list]) => (
-              <div key={cat} className="mt-6">
-                <h3 className="mb-3 !text-base text-aubergine/80">{label(cat)}</h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {list.map((t) => (
-                    <button key={t.id} className="chip" disabled={!!starting}
-                      onClick={() => start(t.id, { mode: 'MANUAL', topicId: t.id, difficulty })}>
-                      {starting === t.id ? 'Preparing...' : t.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+        {/* Category Pills */}
+        <div>
+          <span className="block text-xs font-mono font-bold uppercase text-stone-600 mb-2">
+            Practice Category
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setSelectedCat(c.id)}
+                className={`wire-pill text-xs ${selectedCat === c.id ? 'wire-pill-active' : ''}`}
+              >
+                {c.label}
+              </button>
             ))}
-          </section>
+          </div>
+        </div>
 
-          {/* COMPANY SETS */}
-          <section className="mt-14">
-            <h2 className="!text-2xl sm:!text-3xl">Company practice sets</h2>
-            <p className="mt-1 mb-6 text-sm">Curated questions for specific companies and roles.</p>
+        {/* Difficulty Pills */}
+        <div>
+          <span className="block text-xs font-mono font-bold uppercase text-stone-600 mb-2">
+            Difficulty Level
+          </span>
+          <div className="flex gap-2">
+            {DIFFICULTIES.map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDifficulty(d)}
+                className={`wire-pill text-xs ${difficulty === d ? 'wire-pill-active' : ''}`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        </div>
 
-            {companies.length === 0 && <p className="notice">No company sets yet.</p>}
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {companies.map((c) => (
-                <TiltCard key={c.id}>
-                  <span className="icon-chip"><Building2 size={22} /></span>
-                  <h3 className="mb-3">{c.name}</h3>
-                  <div className="grid gap-2">
-                    {c.practiceSets.map((s) => (
-                      <button key={s.id} disabled={!!starting}
-                        onClick={() => start(s.id, { mode: 'COMPANY_SET', practiceSetId: s.id })}
-                        className="flex cursor-pointer items-center justify-between rounded-xl border border-aubergine/15 bg-silver-light px-4 py-3 text-left text-sm font-semibold text-aubergine transition hover:border-aubergine hover:shadow-soft disabled:opacity-50">
-                        <span>{s.role} <span className="font-medium text-aubergine/60">· {label(s.category)}</span></span>
-                        <span className="flex items-center gap-2">
-                          <span className="badge">{s._count.questions} Q</span>
-                          <Play size={14} />
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </TiltCard>
+        {/* Programming Language Choice Pills: ONLY for DSA */}
+        {selectedCat === 'DSA' && (
+          <div>
+            <span className="block text-xs font-mono font-bold uppercase text-stone-600 mb-2">
+              Programming Language
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {LANGUAGES.map((lang) => (
+                <button
+                  key={lang}
+                  type="button"
+                  onClick={() => setLanguage(lang)}
+                  className={`wire-pill text-xs font-mono ${language === lang ? 'wire-pill-active' : ''}`}
+                >
+                  {lang}
+                </button>
               ))}
             </div>
-          </section>
+          </div>
+        )}
 
-          {/* RECENT SESSIONS */}
-          <section className="mt-14">
-            <h2 className="!text-2xl sm:!text-3xl">Recent sessions</h2>
-            {sessions.length === 0 ? (
-              <p className="mt-3 text-sm">Your finished sessions will show up here.</p>
-            ) : (
-              <div className="card mt-5 divide-y divide-aubergine/10 !p-2">
-                {sessions.slice(0, 6).map((s) => (
-                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 text-sm">
-                    <div>
-                      <span className="font-semibold text-aubergine">
-                        {s.mode === 'COMPANY_SET' ? 'Company set' : 'Topic practice'}
-                      </span>
-                      <span className="ml-2 text-aubergine/60">
-                        {new Date(s.startedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span>{s._count.answers} answers</span>
-                      {s.avgScore != null
-                        ? <span className="badge">Avg {s.avgScore}</span>
-                        : <span className="text-aubergine/50">Unfinished</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+        {/* Start Button */}
+        <div>
+          <button
+            type="button"
+            onClick={() => handleStartSession()}
+            disabled={starting || loading}
+            className="wire-btn wire-btn-primary w-full sm:w-auto px-8 py-2.5 text-sm"
+          >
+            {starting ? 'Generating First Question...' : 'Start Interview Session'}
+          </button>
+        </div>
 
-          {/* COMING SOON */}
-          <section className="mt-14 grid gap-6 md:grid-cols-2">
-            {[
-              { icon: FileText, title: 'Resume ATS checker', text: 'Upload your resume and match it against a job description.' },
-              { icon: Trophy, title: 'Leaderboard and weak topics', text: 'See where you rank and which topics need work.' },
-            ].map(({ icon: Icon, title, text }) => (
-              <div key={title} className="card flex items-start gap-4 opacity-80">
-                <span className="icon-chip !mb-0 shrink-0"><Icon size={22} /></span>
+        {/* Notice Box */}
+        <div className="border-[1.5px] border-primary bg-canvas p-3 rounded text-xs font-mono text-stone-800 leading-relaxed">
+          <strong className="text-primary uppercase">Evaluation Notice: </strong>
+          {selectedCat === 'DSA' ? (
+            <>
+              Your code will be evaluated in <strong>{language}</strong> for correctness, Big-O runtime, space complexity, and edge cases.
+            </>
+          ) : (
+            <>
+              Your response will be evaluated on technical reasoning, architecture trade-offs, and scalability depth. Code is not required for {selectedCat.replace('_', ' ')}.
+            </>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Available Topics List */}
+      <div className="wire-box">
+        <h2 className="text-base font-bold mb-3">
+          Available Topics in {CATEGORIES.find((c) => c.id === selectedCat)?.label || selectedCat}
+        </h2>
+        {loading ? (
+          <div className="text-xs font-mono text-stone-500 py-4 text-center">
+            Loading topics...
+          </div>
+        ) : filteredTopics.length === 0 ? (
+          <div className="text-xs text-stone-600 py-3 text-center">
+            No topics matched your search.
+          </div>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {filteredTopics.map((topic) => (
+              <div
+                key={topic.id}
+                className="wire-sub-box p-3 flex items-center justify-between"
+              >
                 <div>
-                  <h3 className="flex items-center gap-2">{title} <span className="badge">Soon</span></h3>
-                  <p className="mt-1 text-sm">{text}</p>
+                  <div className="font-bold text-xs text-stone-900">{topic.name}</div>
+                  <div className="text-[0.7rem] font-mono text-stone-500">{difficulty} • {language}</div>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleStartSession(topic.id)}
+                  disabled={starting}
+                  className="wire-btn text-xs py-1 px-3"
+                >
+                  Start
+                </button>
               </div>
             ))}
-          </section>
-        </>
+          </div>
+        )}
+      </div>
+
+      {/* Company sets */}
+      {companies.length > 0 && (
+        <div className="wire-box">
+          <h2 className="text-base font-bold mb-3">Company Practice Sets</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {companies.flatMap((c) =>
+              (c.practiceSets || []).map((set) => (
+                <div key={set.id} className="wire-sub-box p-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-mono text-stone-500">{c.name}</div>
+                    <div className="font-bold text-xs text-stone-900">{set.title}</div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    to="/dashboard"
+                    onClick={() => handleStartSession(topics[0]?.id)}
+                  >
+                    Practice
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

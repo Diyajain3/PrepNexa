@@ -1,113 +1,333 @@
-import { lazy, Suspense } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Brain, FileText, Mic, Trophy, BarChart3, ArrowRight } from 'lucide-react';
 import Button from '../components/Button.jsx';
-import TiltCard from '../components/TiltCard.jsx';
 
-// Loaded on demand so the 3D library doesn't slow down the first paint
-const Hero3D = lazy(() => import('../components/Hero3D.jsx'));
-
-const features = [
-  { icon: Building2, title: 'Company practice sets', text: 'Curated question sets for specific companies and roles, in the order an interview flows.' },
-  { icon: Brain, title: 'AI scoring with a rubric', text: 'Every answer is scored on clear criteria, with specific strengths and gaps, not just a number.' },
-  { icon: BarChart3, title: 'Practice by topic', text: 'Pick DSA, system design, HR and more, choose a difficulty, and get fresh questions every time.' },
-  { icon: FileText, title: 'Resume ATS checker', text: 'Match your resume against a job description and see what is missing.', soon: true },
-  { icon: Mic, title: 'Voice interviews', text: 'Speak your answers and hear the questions, like a real interview.', soon: true },
-  { icon: Trophy, title: 'Leaderboard and weak topics', text: 'Track your progress and see exactly which topics need work.', soon: true },
-];
-
-const steps = [
-  { n: '01', title: 'Choose your practice', text: 'Select a company set, or pick a topic and difficulty.' },
-  { n: '02', title: 'Answer the question', text: 'Write your answer the way you would say it in the room.' },
-  { n: '03', title: 'Get scored feedback', text: 'See your score, what you did well, and what to improve next.' },
-];
-
-const fade = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
+const SAMPLE_SNIPPETS = {
+  Python: `def two_sum(nums, target):
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []`,
+  'C++': `vector<int> twoSum(vector<int>& nums, int target) {
+    unordered_map<int, int> seen;
+    for (int i = 0; i < nums.size(); ++i) {
+        int comp = target - nums[i];
+        if (seen.count(comp)) return {seen[comp], i};
+        seen[nums[i]] = i;
+    }
+    return {};
+}`,
+  Java: `public int[] twoSum(int[] nums, int target) {
+    Map<Integer, Integer> seen = new HashMap<>();
+    for (int i = 0; i < nums.length; i++) {
+        int comp = target - nums[i];
+        if (seen.containsKey(comp)) return new int[]{seen.get(comp), i};
+        seen.put(nums[i], i);
+    }
+    return new int[]{};
+}`,
+  JavaScript: `function twoSum(nums, target) {
+    const seen = new Map();
+    for (let i = 0; i < nums.length; i++) {
+        const comp = target - nums[i];
+        if (seen.has(comp)) return [seen.get(comp), i];
+        seen.set(nums[i], i);
+    }
+    return [];
+}`,
+};
 
 export default function Landing() {
+  const [demoLang, setDemoLang] = useState('Python');
+  const [demoCode, setDemoCode] = useState(SAMPLE_SNIPPETS.Python);
+  const [evaluating, setEvaluating] = useState(false);
+  const [result, setResult] = useState({
+    score: 95,
+    time: 'O(N)',
+    space: 'O(N)',
+    feedback: 'Optimal single-pass hash lookup. All edge cases handled cleanly.',
+  });
+
+  const handleLangSelect = (lang) => {
+    setDemoLang(lang);
+    setDemoCode(SAMPLE_SNIPPETS[lang]);
+  };
+
+  const testEvaluation = () => {
+    setEvaluating(true);
+    setTimeout(() => {
+      setEvaluating(false);
+      setResult({
+        score: demoCode.includes('seen') ? 95 : 70,
+        time: demoCode.includes('seen') ? 'O(N)' : 'O(N^2)',
+        space: demoCode.includes('seen') ? 'O(N)' : 'O(1)',
+        feedback: demoCode.includes('seen')
+          ? 'Optimal hash table solution. Evaluated for ' + demoLang + '.'
+          : 'Nested search detected. Optimize with a hash map in ' + demoLang + '.',
+      });
+    }, 400);
+  };
+
   return (
-    <>
-      {/* HERO */}
-      <section className="container-x grid items-center gap-8 py-12 sm:py-20 lg:grid-cols-[1.05fr_0.95fr]">
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
-          <motion.span variants={fade} className="eyebrow">AI interview practice</motion.span>
-          <motion.h1 variants={fade} className="mt-4">
-            Walk into your interview <span className="relative whitespace-nowrap">
-              ready.
-              <span className="absolute -bottom-1 left-0 h-2 w-full rounded-full bg-marigold/70 -z-10" />
-            </span>
-          </motion.h1>
-          <motion.p variants={fade} className="mt-5 max-w-xl text-lg">
-            Practice company-style questions, get scored on a clear rubric, and see exactly what to fix, one answer at a time.
-          </motion.p>
-          <motion.div variants={fade} className="mt-8 flex flex-wrap gap-3">
-            <Button variant="cta" to="/signup">Start practicing free <ArrowRight size={18} /></Button>
-            <Button variant="secondary" to="/login">I have an account</Button>
-          </motion.div>
-        </motion.div>
+    <div className="container-wire py-8 space-y-8">
+      {/* 1. HERO SECTION (Wireframe Section 1) */}
+      <motion.div
+        className="wire-box"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <div className="grid gap-8 md:grid-cols-[1.1fr_0.9fr] items-center">
+          <div>
+            <div className="inline-block border-[1.5px] border-border-dark px-2.5 py-0.5 text-xs font-mono font-bold uppercase mb-4 bg-canvas">
+              Technical Interview Practice
+            </div>
+            <h1 className="text-stone-900 mb-3">
+              Master Technical & DSA Interviews
+            </h1>
+            <p className="text-stone-700 text-sm mb-6 leading-relaxed max-w-md">
+              Practice data structures, algorithms, and system design with multi-language code evaluation.
+              Get instant feedback on syntax, algorithmic logic, time complexity, and edge cases.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="primary" to="/signup">
+                Start Practice Now
+              </Button>
+              <Button variant="secondary" to="/login">
+                Candidate Login
+              </Button>
+            </div>
+            <div className="mt-4 text-xs font-mono text-stone-600">
+              Supported languages: Python, C++, Java, JavaScript
+            </div>
+          </div>
 
-        <div className="relative h-80 sm:h-[460px] lg:h-[520px]">
-          <Suspense fallback={<div className="absolute inset-[12%] rounded-full bg-[radial-gradient(circle_at_35%_30%,#EAAA00,#3A0F34_70%)] opacity-80" />}>
-            <Hero3D />
-          </Suspense>
-        </div>
-      </section>
+          {/* REAL PRODUCT DEMO (Clean wireframe preview) */}
+          <div className="wire-sub-box">
+            <div className="flex items-center justify-between border-b-[1.5px] border-border pb-2 mb-3">
+              <span className="font-mono text-xs font-bold uppercase text-stone-800">
+                Interactive Code Preview
+              </span>
+              <span className="text-xs font-mono text-primary font-bold">
+                {demoLang}
+              </span>
+            </div>
 
-      {/* FEATURES */}
-      <section id="features" className="section">
-        <div className="container-x">
-          <span className="eyebrow">Features</span>
-          <h2 className="mt-3 mb-10 max-w-2xl">Everything you need to practice with purpose</h2>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ icon: Icon, title, text, soon }, i) => (
-              <motion.div
-                key={title}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                transition={{ delay: (i % 3) * 0.08, duration: 0.5 }}
+            {/* Language Selection Pills */}
+            <div className="flex gap-1.5 mb-2">
+              {['Python', 'C++', 'Java', 'JavaScript'].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => handleLangSelect(lang)}
+                  className={`px-2 py-0.5 text-xs font-mono border-[1.5px] rounded ${
+                    demoLang === lang
+                      ? 'border-border-dark bg-border-dark text-canvas font-bold'
+                      : 'border-border bg-canvas text-stone-800'
+                  }`}
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
+
+            {/* Code Box */}
+            <textarea
+              rows={6}
+              value={demoCode}
+              onChange={(e) => setDemoCode(e.target.value)}
+              className="w-full font-mono text-xs p-2.5 bg-[#252830] text-slate-100 rounded border border-border-dark resize-none focus:outline-none"
+              spellCheck="false"
+            />
+
+            <div className="mt-2.5 flex items-center justify-between">
+              <span className="text-[0.7rem] font-mono text-stone-600">
+                Two Sum Algorithm
+              </span>
+              <button
+                type="button"
+                onClick={testEvaluation}
+                disabled={evaluating}
+                className="wire-btn text-xs py-1 px-3"
               >
-                <TiltCard className="h-full">
-                  <span className="icon-chip"><Icon size={22} /></span>
-                  <h3 className="mb-2 flex items-center gap-2">
-                    {title} {soon && <span className="badge">Soon</span>}
-                  </h3>
-                  <p className="text-sm">{text}</p>
-                </TiltCard>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+                {evaluating ? 'Evaluating...' : 'Test Code'}
+              </button>
+            </div>
 
-      {/* HOW IT WORKS */}
-      <section id="how" className="section pt-0">
-        <div className="container-x">
-          <span className="eyebrow">How it works</span>
-          <h2 className="mt-3 mb-10">Three steps. Real feedback.</h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            {steps.map((s) => (
-              <div key={s.n} className="border-t-2 border-aubergine pt-5">
-                <div className="font-display text-5xl font-bold text-marigold [-webkit-text-stroke:1.5px_#3A0F34]">{s.n}</div>
-                <h3 className="mt-3 mb-1">{s.title}</h3>
-                <p className="text-sm">{s.text}</p>
+            {/* Result Box */}
+            <div className="mt-2.5 border-[1.5px] border-border bg-canvas p-2.5 rounded text-xs font-mono">
+              <div className="flex justify-between font-bold text-stone-900 mb-1">
+                <span>Score: {result.score}/100</span>
+                <span className="text-primary">Time: {result.time}</span>
+                <span>Space: {result.space}</span>
               </div>
-            ))}
+              <p className="text-[0.75rem] text-stone-700 leading-normal font-sans">
+                {result.feedback}
+              </p>
+            </div>
           </div>
         </div>
-      </section>
+      </motion.div>
 
-      {/* CTA BAND */}
-      <section className="container-x pb-16">
-        <div className="card-dark relative overflow-hidden text-center sm:px-12 sm:py-16">
-          <div className="pointer-events-none absolute -top-24 -right-20 size-96 rounded-full bg-[radial-gradient(circle,rgba(234,170,0,0.45),transparent_65%)]" />
-          <div className="relative">
-            <h2 className="!text-silver">Your next interview starts here</h2>
-            <p className="mx-auto mt-3 mb-7 max-w-lg text-silver/80">Create a free account and answer your first question in under a minute.</p>
-            <Button variant="cta" to="/signup">Get started</Button>
+      {/* 2. HOW IT WORKS (Wireframe Section 2: 2 cards in a row with arrow indicator) */}
+      <div id="how-it-works" className="wire-box">
+        <h2 className="mb-4">How It Works</h2>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div className="wire-sub-box">
+            <div className="font-mono text-xs font-bold text-primary mb-1">Step 1</div>
+            <h3 className="font-bold mb-2">Select Language & Topic</h3>
+            <p className="text-xs text-stone-700 leading-relaxed">
+              Pick your target language (Python, C++, Java, JS) and choose from DSA topics,
+              system design challenges, or company practice sets.
+            </p>
+          </div>
+
+          <div className="wire-sub-box">
+            <div className="font-mono text-xs font-bold text-primary mb-1">Step 2</div>
+            <h3 className="font-bold mb-2">Write Code & Get Evaluated</h3>
+            <p className="text-xs text-stone-700 leading-relaxed">
+              Write your solution in the built-in editor. Receive line-by-line feedback, Big-O runtime
+              analysis, space efficiency score, and concrete fixes.
+            </p>
           </div>
         </div>
-      </section>
-    </>
+        <div className="mt-4 text-center text-xs font-mono text-stone-600">
+          Automated algorithmic verification for every problem
+        </div>
+      </div>
+
+      {/* 3. PRACTICE MODULES (Wireframe Section 3: Structured list) */}
+      <div className="wire-box">
+        <h2 className="mb-3">Practice Topics & Modules</h2>
+        <div className="wire-sub-box space-y-2 text-xs font-mono text-stone-800">
+          <div className="p-2 border-b border-border">
+            1. Arrays, Two Pointers, and Sliding Window Algorithms
+          </div>
+          <div className="p-2 border-b border-border">
+            2. Linked Lists, Stacks, Queues, and Binary Search
+          </div>
+          <div className="p-2 border-b border-border">
+            3. Binary Trees, Binary Search Trees, and Graph Traversals (BFS/DFS)
+          </div>
+          <div className="p-2 border-b border-border">
+            4. Dynamic Programming, Memoization, and Recursion
+          </div>
+          <div className="p-2 border-b border-border">
+            5. System Architecture, Caching, and Database Optimization
+          </div>
+          <div className="p-2">
+            6. Core Computer Science: OS Processes, Threads, and Networks
+          </div>
+        </div>
+      </div>
+
+      {/* 4. CHOOSE YOUR TRACK (Wireframe Section 4: 3 top cards, 1 wide card below) */}
+      <div className="wire-box">
+        <h2 className="mb-4">Choose Your Practice Track</h2>
+        <div className="grid gap-4 sm:grid-cols-3 mb-4">
+          <div className="wire-sub-box text-center p-4">
+            <div className="font-bold text-sm mb-1">DSA & Algorithms</div>
+            <p className="text-xs text-stone-600">
+              Data structures, algorithm design, and coding challenges.
+            </p>
+          </div>
+          <div className="wire-sub-box text-center p-4">
+            <div className="font-bold text-sm mb-1">System Design</div>
+            <p className="text-xs text-stone-600">
+              Distributed architectures, caching, and scalability.
+            </p>
+          </div>
+          <div className="wire-sub-box text-center p-4">
+            <div className="font-bold text-sm mb-1">Core CS & DBMS</div>
+            <p className="text-xs text-stone-600">
+              Operating systems, database queries, and concurrency.
+            </p>
+          </div>
+        </div>
+
+        <div className="wire-sub-box p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <div className="font-bold text-sm">Company Practice Sets</div>
+            <p className="text-xs text-stone-600">
+              Curated question sets modeled after top engineering interview standards.
+            </p>
+          </div>
+          <Button variant="primary" to="/dashboard">
+            Explore Sets
+          </Button>
+        </div>
+      </div>
+
+      {/* 5. PRE-SESSION CONFIGURATOR (Wireframe Section 5) */}
+      <div className="wire-box">
+        <div className="grid gap-6 md:grid-cols-2 items-center">
+          <div>
+            <h2 className="mb-2">Practice Session Options</h2>
+            <p className="text-xs text-stone-700 mb-4 leading-relaxed">
+              Select your parameters to practice under interview conditions.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <span className="block text-xs font-mono font-bold text-stone-600 uppercase mb-1">
+                  Category
+                </span>
+                <span className="wire-pill wire-pill-active text-xs">
+                  Algorithms & DSA
+                </span>
+              </div>
+              <div>
+                <span className="block text-xs font-mono font-bold text-stone-600 uppercase mb-1">
+                  Difficulty
+                </span>
+                <div className="flex gap-2">
+                  <span className="wire-pill text-xs">Easy</span>
+                  <span className="wire-pill wire-pill-active text-xs">Medium</span>
+                  <span className="wire-pill text-xs">Hard</span>
+                </div>
+              </div>
+              <div>
+                <span className="block text-xs font-mono font-bold text-stone-600 uppercase mb-1">
+                  Language
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="wire-pill wire-pill-active text-xs">Python</span>
+                  <span className="wire-pill text-xs">C++</span>
+                  <span className="wire-pill text-xs">Java</span>
+                  <span className="wire-pill text-xs">JavaScript</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="wire-sub-box p-4">
+            <div className="text-xs font-mono font-bold uppercase text-stone-600 mb-1">
+              Sample Question Preview
+            </div>
+            <div className="font-bold text-sm text-stone-900 mb-2">
+              Valid Palindrome (Two Pointers)
+            </div>
+            <p className="text-xs text-stone-700 leading-relaxed mb-4 font-mono">
+              Given a string s, return true if it is a palindrome, or false otherwise.
+              Ignoring case and non-alphanumeric characters.
+            </p>
+            <Button variant="primary" to="/signup" className="w-full">
+              Start Practice Session
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* 6. BOTTOM CTA (Wireframe Section 6 Bottom) */}
+      <div className="wire-box text-center py-8">
+        <h2 className="mb-2">Ready to Test Your Code?</h2>
+        <p className="text-xs text-stone-600 mb-4 font-mono">
+          Free, private, and instant technical assessment.
+        </p>
+        <Button variant="primary" to="/signup">
+          Create Account & Start Practicing
+        </Button>
+      </div>
+    </div>
   );
 }

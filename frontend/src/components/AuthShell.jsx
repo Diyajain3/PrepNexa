@@ -1,24 +1,50 @@
 import { motion } from 'framer-motion';
-import { Mic } from 'lucide-react';
 
-export default function AuthShell({ title, subtitle, children, footer }) {
+export default function AuthShell({ title, subtitle, children, footer, sideTitle, sidePoints }) {
   return (
-    <div className="relative grid min-h-[calc(100vh-72px)] place-items-center overflow-hidden px-4 py-12">
-      {/* soft depth shapes behind the card */}
-      <div className="pointer-events-none absolute -top-20 -right-24 size-80 rounded-full bg-marigold/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-20 size-96 rounded-full bg-aubergine/15 blur-3xl" />
-
+    <div className="container-wire py-10">
       <motion.div
-        className="glass relative w-full max-w-md rounded-3xl p-8 sm:p-10"
-        initial={{ opacity: 0, y: 24 }}
+        className="wire-box"
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        <span className="icon-chip"><Mic size={22} /></span>
-        <h1 className="!text-3xl sm:!text-4xl">{title}</h1>
-        <p className="mt-2 mb-6 text-sm">{subtitle}</p>
-        {children}
-        <div className="mt-6 text-center text-sm">{footer}</div>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Left Side: Form */}
+          <div className="wire-sub-box p-6 sm:p-8">
+            <h1 className="text-xl sm:text-2xl font-bold text-stone-900 mb-1">{title}</h1>
+            <p className="text-xs text-stone-600 mb-5">{subtitle}</p>
+            {children}
+            <div className="mt-4 border-t border-border pt-3 text-xs text-center text-stone-600">
+              {footer}
+            </div>
+          </div>
+
+          {/* Right Side: Info / Specs */}
+          <div className="wire-sub-box p-6 sm:p-8 flex flex-col justify-between">
+            <div>
+              <div className="text-xs font-mono font-bold uppercase text-stone-600 mb-1">
+                Platform Overview
+              </div>
+              <h2 className="text-lg font-bold text-stone-900 mb-3">
+                {sideTitle || 'Why Practice on IntroAI'}
+              </h2>
+              <ul className="space-y-3 text-xs leading-relaxed text-stone-700">
+                {(sidePoints || [
+                  '1. Language choices: Code in Python, C++, Java, or JavaScript.',
+                  '2. Algorithmic accuracy: Automated syntax and edge-case checking.',
+                  '3. Complexity evaluation: Big-O time and space analysis on every submit.',
+                  '4. Immediate feedback: Clear strengths, gaps, and concrete code improvements.',
+                ]).map((pt, i) => (
+                  <li key={i}>{pt}</li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-6 border-t border-border pt-3 text-[0.72rem] font-mono text-stone-500">
+              Encrypted session security
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

@@ -1,7 +1,12 @@
-
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+const pool = new pg.Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Starting interview question seeding...");
@@ -98,3 +103,98 @@ async function main() {
         },
         {
           text: "Merge two sorted arrays into one sorted array.",
+          difficulty: "EASY",
+          source: "COMPANY_SET",
+        },
+      ],
+    },
+    {
+      role: "Backend Engineer",
+      category: "SYSTEM_DESIGN",
+      questions: [
+        {
+          text: "Design a URL shortening service like Bitly with high read traffic and custom short links.",
+          difficulty: "MEDIUM",
+          source: "COMPANY_SET",
+        },
+        {
+          text: "Design a distributed rate limiter that can handle 100,000 requests per second across multiple regions.",
+          difficulty: "HARD",
+          source: "COMPANY_SET",
+        },
+        {
+          text: "Explain how you would design a cache eviction policy and handle cache stampede.",
+          difficulty: "MEDIUM",
+          source: "COMPANY_SET",
+        },
+      ],
+    },
+    {
+      role: "Behavioral",
+      category: "HR",
+      questions: [
+        {
+          text: "Tell me about a time you had a significant disagreement with a teammate or lead. How did you resolve it?",
+          difficulty: "MEDIUM",
+          source: "COMPANY_SET",
+        },
+        {
+          text: "Describe a project that failed or missed a critical deadline. What did you learn and how did you adapt?",
+          difficulty: "MEDIUM",
+          source: "COMPANY_SET",
+        },
+      ],
+    },
+  ];
+
+  for (const set of practiceSets) {
+    let practiceSet = await prisma.practiceSet.findFirst({
+      where: {
+        companyId: company.id,
+        role: set.role,
+        category: set.category,
+      },
+    });
+
+    if (!practiceSet) {
+      practiceSet = await prisma.practiceSet.create({
+        data: {
+          companyId: company.id,
+          role: set.role,
+          category: set.category,
+        },
+      });
+    }
+
+    for (const q of set.questions) {
+      const exists = await prisma.question.findFirst({
+        where: {
+          practiceSetId: practiceSet.id,
+          text: q.text,
+        },
+      });
+
+      if (!exists) {
+        await prisma.question.create({
+          data: {
+            text: q.text,
+            difficulty: q.difficulty,
+            source: q.source,
+            practiceSetId: practiceSet.id,
+          },
+        });
+      }
+    }
+  }
+
+  console.log("Seeding finished successfully.");
+}
+
+main()
+  .catch((e) => {
+    console.error("Seeding error:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

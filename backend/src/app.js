@@ -13,7 +13,23 @@ import sessionsRoutes from './routes/sessions.routes.js';
 
 const app = express();
 
-app.use(cors({ origin: env.clientUrl }));
+const allowedOrigins = [
+  env.clientUrl,
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
@@ -25,8 +41,6 @@ app.use('/api/topics', topicsRoutes);
 app.use('/api/companies', companiesRoutes);
 app.use('/api/questions', questionsRoutes);
 app.use('/api/sessions', sessionsRoutes);
-
-
 
 app.use(errorHandler); // must be last
 

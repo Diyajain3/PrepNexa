@@ -1,9 +1,9 @@
-import {Router} from "express";
-import { getQuestions } from "../controllers/questions.controller";
-import { requireAuth } from "../middleware/auth.middleware";
+import { Router } from "express";
+import { getQuestions } from "../controllers/questions.controller.js";
+import { requireAuth } from "../middleware/auth.middleware.js";
 
-const router=Router();
+const router = Router();
 
-router.get('/',requireAuth,getQuestions);
+router.get('/', requireAuth, getQuestions);
 
 export default router;

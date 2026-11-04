@@ -1,84 +1,157 @@
 @import "tailwindcss";
 
 @theme {
-  /* The three brand colors */
-  --color-silver: #DDE3E8;
-  --color-aubergine: #3A0F34;
-  --color-marigold: #EAAA00;
-  /* Tints of the same colors, never new hues */
-  --color-silver-light: #E9EDF1;
-  --color-marigold-light: #F3C34A;
+  /* Clean, light, minimalist paper palette */
+  --color-canvas: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-surface-card: #fcfbf9;
+  --color-surface-subtle: #eeece5;
+  --color-border: #d4d0c5;
+  --color-border-dark: #292524;
+  --color-text-main: #1c1917;
+  --color-text-muted: #57534e;
+  --color-primary: #b93815;
+  --color-primary-dark: #9a2c0f;
 
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-display: 'Fraunces', Georgia, serif;
-
-  --shadow-soft: 0 1px 2px rgba(58, 15, 52, 0.08), 0 8px 24px rgba(58, 15, 52, 0.10);
-  --shadow-lift: 0 24px 60px rgba(58, 15, 52, 0.18), 0 6px 16px rgba(58, 15, 52, 0.10);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
 }
 
 @layer base {
-  html { scroll-behavior: smooth; }
-
-  body {
-    @apply bg-silver font-sans text-aubergine/80 antialiased;
-    /* Layered depth: faint marigold light top-right, aubergine shade bottom-left */
-    background-image:
-      radial-gradient(900px 500px at 90% -5%, rgba(234, 170, 0, 0.14), transparent 60%),
-      radial-gradient(800px 600px at -10% 105%, rgba(58, 15, 52, 0.10), transparent 60%);
-    background-attachment: fixed;
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--color-canvas);
+    color: var(--color-text-main);
   }
 
-  h1, h2, h3, h4 { @apply font-display leading-tight tracking-tight text-aubergine; }
-  h1 { @apply text-4xl font-bold sm:text-5xl lg:text-6xl; }
-  h2 { @apply text-3xl font-semibold sm:text-4xl; }
-  h3 { @apply text-xl font-semibold; }
+  body {
+    background-color: var(--color-canvas);
+    font-family: var(--font-sans);
+    color: var(--color-text-main);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
 
-  :focus-visible { outline: 2px solid var(--color-aubergine); outline-offset: 3px; }
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    color: var(--color-text-main);
+    letter-spacing: -0.01em;
+  }
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+  h1 { font-size: 2rem; line-height: 1.25; }
+  @media (min-width: 640px) { h1 { font-size: 2.5rem; } }
+
+  h2 { font-size: 1.5rem; line-height: 1.3; }
+  h3 { font-size: 1.15rem; line-height: 1.35; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 
 @layer components {
-  /* ---------- Buttons ---------- */
-  .btn {
-    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border-[1.5px] border-transparent px-6 py-3 text-[0.95rem] font-semibold transition duration-300 hover:-translate-y-0.5 active:translate-y-0 disabled:pointer-events-none disabled:opacity-50;
-  }
-  .btn-primary { @apply bg-aubergine text-silver shadow-soft hover:shadow-lift; }
-  .btn-cta {
-    @apply bg-linear-to-br from-marigold to-marigold-light text-aubergine shadow-[0_6px_18px_rgba(234,170,0,0.35)] hover:shadow-[0_10px_26px_rgba(234,170,0,0.5)];
-  }
-  .btn-secondary { @apply border-aubergine bg-transparent text-aubergine hover:bg-aubergine hover:text-silver; }
-  .btn-sm { @apply px-4 py-2 text-sm; }
-
-  /* ---------- Surfaces ---------- */
-  .card {
-    @apply rounded-3xl border border-aubergine/15 bg-linear-to-br from-silver-light to-silver p-6 shadow-soft sm:p-7;
-  }
-  .glass { @apply border border-white/50 bg-silver-light/60 shadow-soft backdrop-blur-xl; }
-  .card-dark { @apply rounded-3xl bg-aubergine p-6 text-silver shadow-lift sm:p-8; }
-  .icon-chip {
-    @apply mb-4 grid size-12 place-items-center rounded-2xl bg-aubergine text-marigold shadow-[0_8px_18px_rgba(58,15,52,0.28)];
+  /* Clean wireframe box */
+  .wire-box {
+    background-color: var(--color-surface-card);
+    border: 1.5px solid var(--color-border-dark);
+    border-radius: 8px;
+    padding: 1.5rem;
   }
 
-  /* ---------- Forms ---------- */
-  .label { @apply mb-1.5 block text-sm font-semibold text-aubergine; }
-  .input {
-    @apply w-full rounded-xl border-[1.5px] border-aubergine/15 bg-silver-light px-4 py-3 font-medium text-aubergine transition placeholder:text-aubergine/50 hover:border-aubergine/40 focus:border-aubergine focus:ring-4 focus:ring-marigold/30 focus:outline-none;
+  @media (min-width: 640px) {
+    .wire-box {
+      padding: 2rem;
+    }
   }
 
-  /* ---------- Small parts ---------- */
-  .eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-bold tracking-[0.14em] text-aubergine uppercase before:h-[3px] before:w-7 before:rounded-full before:bg-marigold before:content-[''];
+  .wire-sub-box {
+    background-color: var(--color-canvas);
+    border: 1.5px solid var(--color-border);
+    border-radius: 6px;
+    padding: 1rem;
   }
-  .badge { @apply inline-block rounded-full bg-marigold px-2.5 py-0.5 text-[0.7rem] font-bold tracking-wide text-aubergine; }
-  .chip {
-    @apply cursor-pointer rounded-full border-[1.5px] border-aubergine/15 bg-silver-light px-4 py-2 text-sm font-semibold text-aubergine transition duration-200 hover:-translate-y-0.5 hover:border-aubergine hover:shadow-soft disabled:pointer-events-none disabled:opacity-50;
+
+  /* Buttons */
+  .wire-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border-dark);
+    cursor: pointer;
+    background-color: var(--color-border-dark);
+    color: #f6f5f1;
+    transition: opacity 150ms ease;
   }
-  .chip-active { @apply border-aubergine bg-aubergine text-silver; }
-  /* Errors and info: aubergine text with a marigold bar (no off-brand red) */
-  .notice { @apply mb-4 rounded-xl border-l-4 border-marigold bg-silver-light px-4 py-3 text-sm font-semibold text-aubergine; }
-  .section { @apply py-16 sm:py-24; }
-  .container-x { @apply mx-auto w-[min(1160px,92vw)]; }
+  .wire-btn:hover {
+    opacity: 0.9;
+  }
+  .wire-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .wire-btn-secondary {
+    background-color: transparent;
+    color: var(--color-text-main);
+  }
+  .wire-btn-secondary:hover {
+    background-color: var(--color-surface-subtle);
+  }
+
+  .wire-btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary-dark);
+    color: #f6f5f1;
+  }
+  .wire-btn-primary:hover {
+    background-color: var(--color-primary-dark);
+  }
+
+  /* Form inputs */
+  .wire-input {
+    width: 100%;
+    border: 1.5px solid var(--color-border-dark);
+    border-radius: 6px;
+    background-color: var(--color-surface-card);
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+    color: var(--color-text-main);
+  }
+  .wire-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  /* Pill button */
+  .wire-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.825rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: 1.5px solid var(--color-border-dark);
+    background-color: transparent;
+    color: var(--color-text-main);
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+  .wire-pill-active {
+    background-color: var(--color-border-dark);
+    color: #f6f5f1;
+  }
+
+  .container-wire {
+    margin-left: auto;
+    margin-right: auto;
+    width: min(960px, 92vw);
+  }
 }

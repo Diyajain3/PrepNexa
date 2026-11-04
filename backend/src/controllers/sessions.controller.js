@@ -17,9 +17,9 @@ async function getOwnedSession(id, userId) {
 }
 
 /* POST /api/sessions/start
-   body: { mode: 'MANUAL' | 'COMPANY_SET', topicId?, practiceSetId?, difficulty? } */
+   body: { mode: 'MANUAL' | 'COMPANY_SET', topicId?, practiceSetId?, difficulty?, language? } */
 export async function startSession(req, res) {
-  const { mode, topicId, practiceSetId, difficulty = 'MEDIUM' } = req.body;
+  const { mode, topicId, practiceSetId, difficulty = 'MEDIUM', language = 'Python' } = req.body;
 
   let category, topicName = null, questionIds, firstQuestion, total;
 
@@ -35,8 +35,40 @@ export async function startSession(req, res) {
     firstQuestion = set.questions[0];
     total = questionIds.length;
   } else {
-    const topic = await prisma.topic.findUnique({ where: { id: topicId } });
-    if (!topic) throw httpError(404, 'Topic not found');
+    let topic = null;
+    const requestedCat = String(req.body.category || 'DSA').toUpperCase();
+    const rawName = (req.body.topicName || req.body.topic || '').trim();
+
+    if (topicId) {
+      topic = await prisma.topic.findUnique({ where: { id: topicId } }).catch(() => null);
+    }
+
+    if (!topic && rawName) {
+      topic = await prisma.topic.findUnique({ where: { name: rawName } }).catch(() => null);
+      if (!topic) {
+        topic = await prisma.topic.create({
+          data: { name: rawName, category: requestedCat },
+        });
+      }
+    }
+
+    if (!topic) {
+      topic = await prisma.topic.findFirst({ where: { category: requestedCat } });
+      if (!topic) {
+        const defaultNames = {
+          DSA: 'Data Structures & Algorithms',
+          SYSTEM_DESIGN: 'System Architecture & Scaling',
+          DBMS: 'Database Indexing & Optimization',
+          OS: 'Operating Systems & Concurrency',
+          NETWORKS: 'TCP/IP & Network Protocols',
+          HR: 'Behavioral & Leadership Scenarios',
+        };
+        const name = defaultNames[requestedCat] || `${requestedCat} Core Concepts`;
+        topic = await prisma.topic.create({
+          data: { name, category: requestedCat },
+        });
+      }
+    }
 
     category = topic.category;
     topicName = topic.name;
@@ -51,37 +83,39 @@ export async function startSession(req, res) {
     total = MAX_MANUAL_QUESTIONS;
   }
 
+  const effectiveTopicId = mode === 'MANUAL' ? (topicName ? (await prisma.topic.findUnique({ where: { name: topicName } }))?.id : topicId) : null;
+
   const session = await prisma.interviewSession.create({
     data: {
       userId: req.user.id,
       mode,
-      topicId: mode === 'MANUAL' ? topicId : null,
+      topicId: effectiveTopicId,
       practiceSetId: mode === 'COMPANY_SET' ? practiceSetId : null,
-      difficulty: mode === 'MANUAL' ? difficulty : null,
     },
   });
 
   await createSessionState(session.id, {
     userId: req.user.id,
     mode,
-    topicId: topicId ?? null,
+    topicId: effectiveTopicId,
     topicName,
     practiceSetId: practiceSetId ?? null,
     category,
     difficulty,
+    language,
     questionIds,
     currentIndex: 0,
     total,
     scores: [],
   });
 
-  res.status(201).json({ sessionId: session.id, question: firstQuestion, total });
+  res.status(201).json({ sessionId: session.id, question: firstQuestion, total, category, language });
 }
 
-/* POST /api/sessions/:id/answer   body: { questionId, text } */
+/* POST /api/sessions/:id/answer   body: { questionId, text, language? } */
 export async function submitAnswer(req, res) {
   const { id } = req.params;
-  const { questionId, text } = req.body;
+  const { questionId, text, language } = req.body;
 
   const state = await getSessionState(id);
   if (!state || state.userId !== req.user.id) throw httpError(404, 'Session not found or expired');
@@ -111,10 +145,16 @@ export async function submitAnswer(req, res) {
       );
     }
 
+    const targetLanguage = language || state.language || 'Python';
+
     // Both AI calls finish BEFORE anything is saved. If either fails, nothing is written,
     // so the student can safely resubmit without creating duplicate answers.
     const [result, nextText] = await Promise.all([
-      scoreAnswer(question.text, text, { category: state.category, difficulty: question.difficulty }),
+      scoreAnswer(question.text, text, {
+        category: state.category,
+        difficulty: question.difficulty,
+        language: targetLanguage,
+      }),
       nextTextPromise,
     ]);
 
@@ -176,10 +216,16 @@ export async function getCurrentQuestion(req, res) {
 
   const questionId = state.questionIds[state.currentIndex];
   const question = questionId
-    ? await prisma.question.findUnique({ where: { id: questionId }, select: { id: true, text: true } })
+    ? await prisma.question.findUnique({ where: { id: questionId }, select: { id: true, text: true, difficulty: true } })
     : null;
 
-  res.json({ question, answered: state.currentIndex, total: state.total });
+  res.json({
+    question,
+    answered: state.currentIndex,
+    total: state.total,
+    category: state.category,
+    language: state.language || 'Python',
+  });
 }
 
 /* POST /api/sessions/:id/end */

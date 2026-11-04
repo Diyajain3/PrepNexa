@@ -1,92 +1,94 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
-import { Menu, X, Mic } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Button from './Button.jsx';
-
-const linkClass = ({ isActive }) =>
-  `group relative py-1 text-[0.95rem] font-semibold text-aubergine ${isActive ? 'is-active' : ''}`;
-
-function NavItem({ to, children, onClick }) {
-  return (
-    <NavLink to={to} end className={linkClass} onClick={onClick}>
-      {children}
-      <span className="absolute -bottom-0.5 left-0 h-0.5 w-full origin-left scale-x-0 bg-marigold transition-transform duration-300 group-hover:scale-x-100 group-[.is-active]:scale-x-100" />
-    </NavLink>
-  );
-}
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const close = () => setOpen(false);
 
-  const handleLogout = () => { logout(); close(); navigate('/'); };
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-aubergine/15 bg-silver/80 backdrop-blur-xl">
-      <div className="container-x flex h-[72px] items-center justify-between">
-        <Link to="/" onClick={close} className="flex items-center gap-2.5 font-display text-xl font-bold text-aubergine">
-          <span className="grid size-9 place-items-center rounded-xl bg-aubergine text-marigold">
-            <Mic size={18} />
+    <header className="border-b-[1.5px] border-border-dark bg-canvas py-3">
+      <div className="container-wire flex items-center justify-between">
+        <Link to="/" className="font-mono text-base font-bold text-stone-900 flex items-center gap-2">
+          <span className="border-[1.5px] border-border-dark px-1.5 py-0.5 text-xs bg-surface-card">
+            AI
           </span>
-          IntroAI
+          <span>IntroAI</span>
         </Link>
 
-        {/* Desktop */}
-        <nav className="hidden items-center gap-7 md:flex">
-          <NavItem to="/">Home</NavItem>
-          {user && <NavItem to="/dashboard">Dashboard</NavItem>}
-          {/* TODO (Phase 2): Resume ATS, Progress, Leaderboard */}
+        <nav className="hidden items-center gap-6 sm:flex">
+          <NavLink to="/" className="text-sm font-semibold text-stone-800 hover:text-primary">
+            Overview
+          </NavLink>
+          {user && (
+            <NavLink to="/dashboard" className="text-sm font-semibold text-stone-800 hover:text-primary">
+              Practice
+            </NavLink>
+          )}
+          <a href="/#how-it-works" className="text-sm font-semibold text-stone-800 hover:text-primary">
+            How it Works
+          </a>
+
           {user ? (
-            <Button variant="secondary" size="sm" onClick={handleLogout}>Log out</Button>
+            <Button variant="secondary" onClick={handleLogout}>
+              Sign Out
+            </Button>
           ) : (
-            <>
-              <NavItem to="/login">Log in</NavItem>
-              <Button variant="cta" size="sm" to="/signup">Start free</Button>
-            </>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" to="/login">
+                Sign In
+              </Button>
+              <Button variant="primary" to="/signup">
+                Get Started
+              </Button>
+            </div>
           )}
         </nav>
 
+        {/* Mobile menu button */}
         <button
-          className="cursor-pointer p-2 text-aubergine md:hidden"
-          aria-label="Toggle menu"
-          aria-expanded={open}
+          className="border-[1.5px] border-border-dark px-2 py-1 text-xs font-mono sm:hidden"
           onClick={() => setOpen(!open)}
         >
-          {open ? <X /> : <Menu />}
+          Menu
         </button>
       </div>
 
-      {/* Mobile */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="overflow-hidden border-t border-aubergine/15 md:hidden"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25 }}
-          >
-            <div className="container-x grid gap-2 py-4">
-              <Button variant="secondary" to="/" onClick={close}>Home</Button>
-              {user ? (
-                <>
-                  <Button variant="secondary" to="/dashboard" onClick={close}>Dashboard</Button>
-                  <Button variant="primary" onClick={handleLogout}>Log out</Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="secondary" to="/login" onClick={close}>Log in</Button>
-                  <Button variant="cta" to="/signup" onClick={close}>Start free</Button>
-                </>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && (
+        <div className="border-t-[1.5px] border-border-dark bg-surface-card p-4 sm:hidden">
+          <div className="grid gap-2">
+            <Link to="/" onClick={() => setOpen(false)} className="text-sm font-semibold py-1">
+              Overview
+            </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" onClick={() => setOpen(false)} className="text-sm font-semibold py-1">
+                  Practice Dashboard
+                </Link>
+                <button onClick={handleLogout} className="text-left text-sm font-semibold text-primary py-1">
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setOpen(false)} className="text-sm font-semibold py-1">
+                  Sign In
+                </Link>
+                <Link to="/signup" onClick={() => setOpen(false)} className="text-sm font-semibold text-primary py-1">
+                  Get Started
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
