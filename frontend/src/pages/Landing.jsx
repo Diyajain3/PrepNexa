@@ -88,8 +88,7 @@ export default function Landing() {
               Master Technical & DSA Interviews
             </h1>
             <p className="text-stone-700 text-sm mb-6 leading-relaxed max-w-md">
-              Practice data structures, algorithms, and system design with multi-language code evaluation.
-              Get instant feedback on syntax, algorithmic logic, time complexity, and edge cases.
+              A focused interview simulator for coding, system design, and core CS. Pick a topic, work through a real prompt, then get a clear score with strengths and next steps.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button variant="primary" to="/signup">
@@ -120,7 +119,9 @@ export default function Landing() {
               {['Python', 'C++', 'Java', 'JavaScript'].map((lang) => (
                 <button
                   key={lang}
+                  type="button"
                   onClick={() => handleLangSelect(lang)}
+                  aria-pressed={demoLang === lang}
                   className={`px-2 py-0.5 text-xs font-mono border-[1.5px] rounded ${
                     demoLang === lang
                       ? 'border-border-dark bg-border-dark text-canvas font-bold'
@@ -134,6 +135,7 @@ export default function Landing() {
 
             {/* Code Box */}
             <textarea
+              aria-label={`Sample interview code in ${demoLang}`}
               rows={6}
               value={demoCode}
               onChange={(e) => setDemoCode(e.target.value)}
@@ -143,21 +145,21 @@ export default function Landing() {
 
             <div className="mt-2.5 flex items-center justify-between">
               <span className="text-[0.7rem] font-mono text-stone-600">
-                Two Sum Algorithm
+                Edit the sample and run a lightweight complexity preview
               </span>
               <button
                 type="button"
                 onClick={testEvaluation}
                 disabled={evaluating}
-                className="wire-btn text-xs py-1 px-3"
+                className="wire-btn shrink-0 whitespace-nowrap text-xs py-1 px-3"
               >
                 {evaluating ? 'Evaluating...' : 'Test Code'}
               </button>
             </div>
 
             {/* Result Box */}
-            <div className="mt-2.5 border-[1.5px] border-border bg-canvas p-2.5 rounded text-xs font-mono">
-              <div className="flex justify-between font-bold text-stone-900 mb-1">
+            <div className="demo-result mt-2.5 border-[1.5px] border-border bg-canvas p-2.5 rounded text-xs font-mono" aria-live="polite">
+              <div className="demo-result-stats flex justify-between font-bold text-stone-900 mb-1">
                 <span>Score: {result.score}/100</span>
                 <span className="text-primary">Time: {result.time}</span>
                 <span>Space: {result.space}</span>
@@ -187,8 +189,8 @@ export default function Landing() {
             <div className="font-mono text-xs font-bold text-primary mb-1">Step 2</div>
             <h3 className="font-bold mb-2">Write Code & Get Evaluated</h3>
             <p className="text-xs text-stone-700 leading-relaxed">
-              Write your solution in the built-in editor. Receive line-by-line feedback, Big-O runtime
-              analysis, space efficiency score, and concrete fixes.
+                Write your solution in the built-in editor, then review structured feedback on correctness,
+                runtime, space use, and what to improve next.
             </p>
           </div>
         </div>

@@ -99,7 +99,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {error && <div className="text-xs text-primary font-bold">{error}</div>}
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{error}</div>}
 
       {/* WIREFRAME SECTION 4: PRACTICE CONFIGURATOR (Directly matches sketch) */}
       <motion.div
@@ -156,6 +156,7 @@ export default function Dashboard() {
                 key={c.id}
                 type="button"
                 onClick={() => setSelectedCat(c.id)}
+                aria-pressed={selectedCat === c.id}
                 className={`wire-pill text-xs ${selectedCat === c.id ? 'wire-pill-active' : ''}`}
               >
                 {c.label}
@@ -175,6 +176,7 @@ export default function Dashboard() {
                 key={d}
                 type="button"
                 onClick={() => setDifficulty(d)}
+                aria-pressed={difficulty === d}
                 className={`wire-pill text-xs ${difficulty === d ? 'wire-pill-active' : ''}`}
               >
                 {d}
@@ -195,6 +197,7 @@ export default function Dashboard() {
                   key={lang}
                   type="button"
                   onClick={() => setLanguage(lang)}
+                  aria-pressed={language === lang}
                   className={`wire-pill text-xs font-mono ${language === lang ? 'wire-pill-active' : ''}`}
                 >
                   {lang}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Menu, X, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Button from './Button.jsx';
 
@@ -16,16 +17,16 @@ export default function Navbar() {
   return (
     <header className="border-b-[1.5px] border-border-dark bg-canvas py-3">
       <div className="container-wire flex items-center justify-between">
-        <Link to="/" className="font-mono text-base font-bold text-stone-900 flex items-center gap-2">
-          <span className="border-[1.5px] border-border-dark px-1.5 py-0.5 text-xs bg-surface-card">
-            AI
+        <Link to="/" aria-label="PrepNexa home" className="font-mono text-base font-bold text-stone-900 flex items-center gap-2">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-white shadow-sm">
+            <Zap size={18} fill="currentColor" aria-hidden="true" />
           </span>
-          <span>IntroAI</span>
+          <span className="font-sans text-lg tracking-tight">PrepNexa<span className="text-primary">.</span></span>
         </Link>
 
         <nav className="hidden items-center gap-6 sm:flex">
           <NavLink to="/" className="text-sm font-semibold text-stone-800 hover:text-primary">
-            Overview
+            Discover
           </NavLink>
           {user && (
             <NavLink to="/dashboard" className="text-sm font-semibold text-stone-800 hover:text-primary">
@@ -54,18 +55,22 @@ export default function Navbar() {
 
         {/* Mobile menu button */}
         <button
-          className="border-[1.5px] border-border-dark px-2 py-1 text-xs font-mono sm:hidden"
+          type="button"
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={open}
+          aria-controls="mobile-navigation"
+          className="flex size-11 items-center justify-center rounded-full border border-border bg-white text-stone-900 sm:hidden"
           onClick={() => setOpen(!open)}
         >
-          Menu
+          {open ? <X size={19} /> : <Menu size={19} />}
         </button>
       </div>
 
       {open && (
-        <div className="border-t-[1.5px] border-border-dark bg-surface-card p-4 sm:hidden">
-          <div className="grid gap-2">
+        <div id="mobile-navigation" className="border-t border-border bg-surface-card p-4 sm:hidden">
+          <div className="grid gap-3">
             <Link to="/" onClick={() => setOpen(false)} className="text-sm font-semibold py-1">
-              Overview
+              Discover
             </Link>
             {user ? (
               <>
